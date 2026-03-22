@@ -10,7 +10,7 @@
 extern const char *fileList;
 extern char pathName[];
 
-#define enChargingRtc 0
+#define enChargingRtc 1
 
 /*
 Mode 0: Automatically get pic folder names and sort them
@@ -61,24 +61,36 @@ void run_display(Time_data Time, Time_data alarmTime, char hasCard)
 
 int main(void)
 {
+    // Print firmware identification and build info
+    printf("PhotoPainter (B) - Built: %s %s\r\n", __DATE__, __TIME__);
+    
+    // Initialize time structures for current time and alarm time
     Time_data Time = {2024-2000, 3, 31, 0, 0, 0};
     Time_data alarmTime = Time;
     // alarmTime.seconds += 10;
-    // alarmTime.minutes += 5; 
-    alarmTime.hours +=12;
-    char isCard = 0;
+    alarmTime.minutes += 15; 
+    //alarmTime.hours +=12;
+    char isCard = 0;  // Flag to indicate if SD card is present
   
     printf("Init...\r\n");
+    
+    // Initialize hardware modules
     if(DEV_Module_Init() != 0) {  // DEV init
         return -1;
     }
     
+    // Enable watchdog timer for 8 seconds to prevent hangs
     watchdog_enable(8*1000, 1);   // 8s
     DEV_Delay_ms(1000);
+    
+    // Initialize Real-Time Clock (RTC)
     PCF85063_init();    // RTC init
     rtcRunAlarm(Time, alarmTime);  // RTC run alarm
+    
+    // Set up GPIO interrupt for charge state changes
     gpio_set_irq_enabled_with_callback(CHARGE_STATE, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, chargeState_callback);
 
+    // Check battery voltage - if too low, enter low power mode
     if(measureVBAT() < 3.1) {   // battery power is low
         printf("low power ...\r\n");
         PCF85063_alarm_Time_Disable();
@@ -91,39 +103,41 @@ int main(void)
         ledPowerOn();
     }
 
+    // Check SD card presence and handle different modes
     if(!sdTest()) 
     {
         isCard = 1;
         if(Mode == 0)
         {
             printf("Mode 0\r\n");
-            sdScanDir();
-            file_sort();
+            sdScanDir();  // Scan directory and save file list
+            file_sort();  // Sort the file list
         }
         if(Mode == 1)
         {
             printf("Mode 1\r\n");
-            sdScanDir();
+            sdScanDir();  // Scan directory and save file list (no sorting)
         }
         if(Mode == 2)
         {
             printf("Mode 2\r\n");
-            file_cat();
+            file_cat();  // Read existing file list from SD card
         }
         
     }
     else 
     {
-        isCard = 0;
+        isCard = 0;  // No SD card detected
     }
 
-    if(!DEV_Digital_Read(VBUS)) {    // no charge state
+    // Main operation loop - handle charging vs normal display modes
+    if(!DEV_Digital_Read(VBUS)) {    // no charge state - normal operation
         run_display(Time, alarmTime, isCard);
     }
-    else {  // charge state
+    else {  // charge state - enter charging loop
         chargeState_callback();
         while(DEV_Digital_Read(VBUS)) {
-            measureVBAT();
+            measureVBAT();  // Monitor battery voltage during charging
             #if enChargingRtc
                 if(!DEV_Digital_Read(RTC_INT)) {    // RTC interrupt trigger
                     printf("rtc interrupt\r\n");
