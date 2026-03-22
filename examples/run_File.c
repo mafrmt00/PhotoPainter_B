@@ -202,6 +202,12 @@ void ls2file(const char *dir, const char *path) {
         panic("f_open(%s) error: %s (%d) \n", path, FRESULT_str(fr), fr);
     // f_printf(&fil, "{");
     while (fr == FR_OK && fno.fname[0]) { /* Repeat while an item is found */
+        /* Skip hidden/system/dot entries */
+        if ((fno.fattrib & AM_HID) || strcmp(fno.fname, ".") == 0 || strcmp(fno.fname, "..") == 0) {
+            fr = f_findnext(&dj, &fno); /* Search for next item */
+            continue;
+        }
+
         /* Create a string that includes the file name, the file size and the
          attributes string. */
         const char *pcWritableFile = "writable file",
