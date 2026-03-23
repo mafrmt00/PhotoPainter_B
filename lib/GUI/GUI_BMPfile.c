@@ -42,6 +42,56 @@
 #include "f_util.h"
 #include "ff.h"
 
+//#define CALIBRATION_TARGET  // Uncomment to enable calibration test pattern
+
+UBYTE RGBtoColor(UBYTE r, UBYTE g, UBYTE b) {
+    float rf = r / 255.0f;
+    float gf = g / 255.0f;
+    float bf = b / 255.0f;
+    
+    float max_val = fmaxf(rf, fmaxf(gf, bf));
+    float min_val = fminf(rf, fminf(gf, bf));
+    float delta = max_val - min_val;
+    
+    float L = (max_val + min_val) / 2.0f;
+    
+    float S = 0.0f;
+    float H = 0.0f;
+    
+    if (delta > 0.0001f) {  // small epsilon for float comparison
+        if (L < 0.5f) {
+            S = delta / (max_val + min_val);
+        } else {
+            S = delta / (2.0f - max_val - min_val);
+        }
+        
+        if (max_val == rf) {
+            H = (gf - bf) / delta;
+            if (gf < bf) H += 6.0f;
+        } else if (max_val == gf) {
+            H = (bf - rf) / delta + 2.0f;
+        } else {
+            H = (rf - gf) / delta + 4.0f;
+        }
+        H *= 60.0f;
+        if (H < 0.0f) H += 360.0f;
+    }
+    
+    // Determine color based on HSL with wider margins
+    if (L < 0.3f) return 0; // Black
+    if (L > 0.7f) return 1; // White
+    if (S < 0.2f) return 1; // Low saturation, treat as white
+    
+    // Colored pixels
+    if ((H >= 330.0f || H < 30.0f)) return 3; // Red
+    if (H >= 30.0f && H < 90.0f) return 2; // Yellow
+    if (H >= 90.0f && H < 150.0f) return 6; // Green
+    if (H >= 210.0f && H < 270.0f) return 5; // Blue
+    
+    // Default to white if no match
+    return 1;
+}
+
 UBYTE GUI_ReadBmp_RGB_6Color(const char *path, UWORD Xstart, UWORD Ystart)
 {
     BMPFILEHEADER bmpFileHeader;  //Define a bmp file header structure
@@ -92,6 +142,15 @@ UBYTE GUI_ReadBmp_RGB_6Color(const char *path, UWORD Xstart, UWORD Ystart)
     
     for(y = 0; y < bmpInfoHeader.biHeight; y++) {//Total display column
         for(x = 0; x < bmpInfoHeader.biWidth ; x++) {//Show a line in the line
+#ifdef CALIBRATION_TARGET
+            // Generate vertical stripes for calibration test pattern
+            int stripe_width = bmpInfoHeader.biWidth / 6;
+            if (stripe_width == 0) stripe_width = 1;
+            int stripe_index = x / stripe_width;
+            if (stripe_index >= 6) stripe_index = 5;
+            UBYTE stripe_colors[6] = {0, 1, 2, 3, 5, 6};
+            color = stripe_colors[stripe_index];
+#else
             if(f_read(&fil, (char *)Rdata, 1, &br) != FR_OK) {
                 perror("get bmpdata:\r\n");
                 break;
@@ -105,25 +164,8 @@ UBYTE GUI_ReadBmp_RGB_6Color(const char *path, UWORD Xstart, UWORD Ystart)
                 break;
             }
 
-			if(Rdata[0] == 0 && Rdata[1] == 0 && Rdata[2] == 0){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  0;//Black
-                color = 0;
-			}else if(Rdata[0] == 255 && Rdata[1] == 255 && Rdata[2] == 255){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  1;//White
-                color = 1;
-			}else if(Rdata[0] == 0 && Rdata[1] == 255 && Rdata[2] == 255){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  2;//Yellow
-                color = 2;
-			}else if(Rdata[0] == 0 && Rdata[1] == 0 && Rdata[2] == 255){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  3;//Red
-                color = 3;
-			}else if(Rdata[0] == 255 && Rdata[1] == 0 && Rdata[2] == 0){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  5;//Blue
-                color = 5;
-			}else if(Rdata[0] == 0 && Rdata[1] == 255 && Rdata[2] == 0){
-				// Image[x+(y* bmpInfoHeader.biWidth )] =  6;//Green
-                color = 6;
-			}
+            color = RGBtoColor(Rdata[2], Rdata[1], Rdata[0]);
+#endif
             Paint_SetPixel(Xstart + bmpInfoHeader.biWidth-1-x, Ystart + y, color);
         }
         watchdog_update();
