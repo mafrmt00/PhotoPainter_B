@@ -92,12 +92,12 @@ def process_image(input_path, args):
     # ────────────────────────────────────────────────
     pal_image = Image.new("P", (1,1))
     pal_image.putpalette(
-        (0,   0,   0,     # black
-        255, 255, 255,    # white
-        240, 224,  80,    # yellow
-        160,  32,  32,    # red
-         80, 128, 184,    # blue
-         96, 128,  80)    # green        
+        (25,  30,  33,  # #191E21  → dark slate / near-black
+        232, 232, 232,  # #e8e8e8  → light gray / near-white
+        239, 222, 68,   # #efde44  → bright yellow / gold
+        178, 19,  24,   # #b21318  → deep red
+        33,  87,  186,  # #2157ba  → deep blue
+        18,  95,  32)   # #125f20  → dark green
         + (0,0,0)*250     # pad to 256
     )
 

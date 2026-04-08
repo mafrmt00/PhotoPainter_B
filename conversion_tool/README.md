@@ -86,3 +86,7 @@ python convert.py example.png --output converted.bmp
 - The converter uses a hard-coded 7-color palette that matches common E Ink photo-frame firmware expectations.
 - `--mode cut` always fills the entire frame resolution and may crop image edges.
 - `--mode scale` preserves the whole image, adding white bars as needed.
+
+## References
+
+- **Spectra 6 Palette**: Based on research and implementation from [Utzel-Butzel's photoframe project](https://github.com/Utzel-Butzel), which explores optimal color palettes for E Ink Spectra 6 displays.
