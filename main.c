@@ -12,6 +12,9 @@
 extern const char *fileList;
 extern char pathName[];
 
+extern int test_minini_main(void);
+const char Frameinifile[] = "frame.ini";
+
 #define enChargingRtc 1
 
 // Alarm interval in minutes
@@ -147,38 +150,44 @@ void run_display(char hasCard)
  */
 void load_rtc_from_ini(void)
 {
-    char iniFile[] = "frame.ini";
     long update_flag = 0;
     long year, month, day, hour, minute, second;
 
     // Read the update flag first
-    update_flag = ini_getl("datetime", "update", 0, iniFile);
-
-    if (update_flag == 1)
+    if (ini_haskey("datetime", "update", Frameinifile))
     {
-        // Read date/time values from ini file
-        year = ini_getl("datetime", "year", 2026, iniFile);
-        month = ini_getl("datetime", "month", 1, iniFile);
-        day = ini_getl("datetime", "day", 1, iniFile);
-        hour = ini_getl("datetime", "hour", 0, iniFile);
-        minute = ini_getl("datetime", "minute", 0, iniFile);
-        second = ini_getl("datetime", "second", 0, iniFile);
+        update_flag = ini_getl("datetime", "update", 0, Frameinifile);
 
-        // Apply the date and time to RTC
-        PCF85063_SetTime_YMD((int)year, (int)month, (int)day);
-        PCF85063_SetTime_HMS((int)hour, (int)minute, (int)second);
+        if (update_flag == 1)
+        {
+            // Read date/time values from ini file
+            year = ini_getl("datetime", "year", 2026, Frameinifile);
+            month = ini_getl("datetime", "month", 1, Frameinifile);
+            day = ini_getl("datetime", "day", 1, Frameinifile);
+            hour = ini_getl("datetime", "hour", 0, Frameinifile);
+            minute = ini_getl("datetime", "minute", 0, Frameinifile);
+            second = ini_getl("datetime", "second", 0, Frameinifile);
 
-        PCF85063_PrintCurrentTime();
-        printf("RTC updated from frame.ini: %04ld-%02ld-%02ld %02ld:%02ld:%02ld\n", 
-               year, month, day, hour, minute, second);
+            // Apply the date and time to RTC
+            PCF85063_SetTime_YMD((int)year, (int)month, (int)day);
+            PCF85063_SetTime_HMS((int)hour, (int)minute, (int)second);
 
-        // Reset the update flag to 0
-        ini_putl("datetime", "update", 0, iniFile);
-        printf("Update flag reset to 0\n");
+            PCF85063_PrintCurrentTime();
+            printf("RTC updated from frame.ini: %04ld-%02ld-%02ld %02ld:%02ld:%02ld\n", 
+                year, month, day, hour, minute, second);
+
+            // Reset the update flag to 0
+            ini_putl("datetime", "update", 0, Frameinifile);
+            printf("Update flag reset to 0\n");
+        }
+        else
+        {
+            printf("No RTC update requested (update flag = %ld)\n", update_flag);
+        }
     }
     else
     {
-        printf("No RTC update requested (update flag = %ld)\n", update_flag);
+        printf("No update flag found in frame.ini, skipping RTC update\n");
     }
 }
 
@@ -208,6 +217,7 @@ int main(void)
 {
     // Flag to track SD card presence
     char isCard = 0;
+    uint64_t uiAlarmIn = RTC_ALARM_INTERVAL * 60; // Default alarm interval in seconds
       
     // ========== HARDWARE INITIALIZATION ==========
     // Initialize all hardware peripherals (GPIO, SPI, I2C, ADC)
@@ -227,7 +237,7 @@ int main(void)
     // Clear any previous RTC alarm flag to start fresh
     PCF85063_clear_alarm_flag();
     // Configure RTC alarm to wake device periodically
-    rtcRunAlarm(RTC_ALARM_INTERVAL * 60);
+    rtcRunAlarm(uiAlarmIn); //Safe default 60sec interval if dynamic setting fails
 
     //Countdown test for RTC to enable Serial output observation
     PCF85063_test();
@@ -295,7 +305,33 @@ int main(void)
             file_cat();  // Read and parse existing fileList.txt
         }
 
+        run_mount();
+
+        test_minini_main(); // Run minIni tests to verify INI file handling
+
         load_rtc_from_ini(); // Load RTC settings from frame.ini if update flag is set
+
+        if (ini_haskey("display_update", "seconds", Frameinifile))
+        {
+            long display_update_sec = ini_getl("display_update", "seconds", RTC_ALARM_INTERVAL * 60, Frameinifile);
+            if (display_update_sec <= 60) 
+            {
+                display_update_sec = uiAlarmIn;
+                printf("Invalid display_update interval in frame.ini, using default: %ld seconds\r\n", display_update_sec);
+            }
+            if (display_update_sec != RTC_ALARM_INTERVAL * 60) 
+            {
+                printf("Using display_update interval from frame.ini: %ld seconds\r\n", display_update_sec);
+                uiAlarmIn = display_update_sec;
+            }
+            rtcRunAlarm((uint64_t)uiAlarmIn); // Update RTC alarm with new interval
+        }
+        else 
+        {
+            printf("No display_update setting found in frame.ini\r\n");
+        }
+
+        run_unmount();
     }
     else 
     {
@@ -343,7 +379,7 @@ int main(void)
                 
                 // If charging with RTC enabled, reschedule next alarm
                 #if enChargingRtc
-                    rtcRunAlarm(RTC_ALARM_INTERVAL * 60);
+                    rtcRunAlarm(uiAlarmIn);
                 #endif
                 
                 // Update display while plugged in
