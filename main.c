@@ -14,6 +14,7 @@ extern char pathName[];
 
 extern int test_minini_main(void);
 const char Frameinifile[] = "frame.ini";
+int overlayId = 3;  // Default overlay mode: 3 = date-time
 
 #define enChargingRtc 1
 
@@ -122,9 +123,9 @@ void run_display(char hasCard)
     {
         // Prepare the file path for the next image to display
         setFilePath();
-        // Display BMP image with date/time overlay
+        // Display BMP image with overlay configured by frame.ini
         // overlayId: 3=date-time, 1=month calendar, 2=week calendar
-        EPD_7in3e_display_BMP(pathName, measureVBAT(), 3);
+        EPD_7in3e_display_BMP(pathName, measureVBAT(), overlayId);
     }
     else 
     {
@@ -239,8 +240,12 @@ int main(void)
     // Configure RTC alarm to wake device periodically
     rtcRunAlarm(uiAlarmIn); //Safe default 60sec interval if dynamic setting fails
 
-    //Countdown test for RTC to enable Serial output observation
-    PCF85063_test();
+    if(DEV_Digital_Read(VBUS)) 
+    {
+        //Countdown test for RTC to enable Serial output observation on startup when connected to USB power
+        printf("USB power detected - starting countdown test...\r\n");
+        PCF85063_test();
+    }
 
     // Enable watchdog timer: 8 seconds timeout, will reset on overflow
     // This prevents system hangs by forcing a reset if main loop stalls
@@ -329,6 +334,22 @@ int main(void)
         else 
         {
             printf("No display_update setting found in frame.ini\r\n");
+        }
+
+        if (ini_haskey("overlay", "id", Frameinifile))
+        {
+            long overlay_setting = ini_getl("overlay", "id", 3, Frameinifile);
+            if (overlay_setting < 0 || overlay_setting > 3) 
+            {
+                printf("Invalid overlay id %ld in frame.ini, using default 3\r\n", overlay_setting);
+                overlay_setting = 3;
+            }
+            overlayId = (int)overlay_setting;
+            printf("Using overlay id %d from frame.ini\r\n", overlayId);
+        }
+        else
+        {
+            printf("No overlay setting found in frame.ini, using default %d\r\n", overlayId);
         }
 
         run_unmount();
