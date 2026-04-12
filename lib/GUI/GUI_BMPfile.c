@@ -54,11 +54,10 @@ UBYTE RGBtoColor(UBYTE r, UBYTE g, UBYTE b) {
     float delta = max_val - min_val;
     
     float L = (max_val + min_val) / 2.0f;
-    
     float S = 0.0f;
     float H = 0.0f;
     
-    if (delta > 0.0001f) {  // small epsilon for float comparison
+    if (delta > 0.0001f) {
         if (L < 0.5f) {
             S = delta / (max_val + min_val);
         } else {
@@ -77,19 +76,20 @@ UBYTE RGBtoColor(UBYTE r, UBYTE g, UBYTE b) {
         if (H < 0.0f) H += 360.0f;
     }
     
-    // Determine color based on HSL with wider margins
-    if (L < 0.3f) return 0; // Black
-    if (L > 0.7f) return 1; // White
-    if (S < 0.2f) return 1; // Low saturation, treat as white
-    
-    // Colored pixels
-    if ((H >= 330.0f || H < 30.0f)) return 3; // Red
-    if (H >= 30.0f && H < 90.0f) return 2; // Yellow
-    if (H >= 90.0f && H < 150.0f) return 6; // Green
-    if (H >= 210.0f && H < 270.0f) return 5; // Blue
-    
-    // Default to white if no match
-    return 1;
+    // The retutn values are defined by the ePaper controlle! DO NOT CHANGE THEM!
+
+    // Adjusted thresholds
+    if (L < 0.15f) return 0;           // only very dark → black
+    if (L > 0.80f) return 1;           // very bright → white
+    if (S < 0.25f) return 1;           // low saturation → white (slightly higher threshold)
+
+    // Colored regions (wider/more forgiving where needed)
+    if (H >= 330.0f || H < 40.0f)  return 3; // Red (extended a bit)
+    if (H >= 40.0f  && H < 90.0f)  return 2; // Yellow
+    if (H >= 90.0f  && H < 160.0f) return 6; // Green
+    if (H >= 200.0f && H < 270.0f) return 5; // Blue
+
+    return 1; // default
 }
 
 UBYTE GUI_ReadBmp_RGB_6Color(const char *path, UWORD Xstart, UWORD Ystart)
