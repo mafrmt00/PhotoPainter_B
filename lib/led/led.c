@@ -23,24 +23,18 @@ void ledLowPower(void)
 
 void ledCharging(void)
 {
-    DEV_Digital_Write(LED_PWR, 1);
+    //DEV_Digital_Write(LED_PWR, 1);
 }
 
 void ledCharged(void)
 {
-    DEV_Digital_Write(LED_PWR, 0);
+    //DEV_Digital_Write(LED_PWR, 0);
 }
 
 void powerOff(void)
 {
     DEV_Digital_Write(BAT_OFF, 0);
 }
-
-
-
-
-
-
 
 void led_OFF_ACT(void)
 {
@@ -52,6 +46,15 @@ void led_ON_ACT(void)
     DEV_Digital_Write(LED_ACT, 1);
 }
 
+void led_ON_PWR(void)
+{
+    DEV_Digital_Write(LED_PWR, 1);
+}   
+
+void led_OFF_PWR(void)
+{
+    DEV_Digital_Write(LED_PWR, 0);
+}
 
 
 

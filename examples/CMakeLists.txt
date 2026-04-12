@@ -5,6 +5,7 @@ aux_source_directory(. DIR_examples_SRCS)
 include_directories(../lib/Config)
 include_directories(../lib/GUI)
 include_directories(../lib/e-Paper)
+include_directories(../lib/RTC)
 include_directories(./lib/FatFs_SPI/**)
 
 # Generate the link library

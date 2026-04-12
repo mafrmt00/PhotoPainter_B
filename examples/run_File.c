@@ -281,17 +281,16 @@ void sdInitTest(void)
 */
 char sdTest(void)
 {
-    printf("111111111\n");
     sd_card_t *pSD = sd_get_by_num(0);
-    printf("222222222\n");
+    printf("Try to mount SD card...\n");
     FRESULT fr = f_mount(&pSD->fatfs, pSD->pcName, 1);
-    printf("333333333\n");
+
     if(FR_OK != fr) {
-        printf("4444444444\n");
+        printf("SD card mount error: %s (%d)\n", FRESULT_str(fr), fr);
         return 1;
     }
     else {
-        printf("555555555\n");
+        printf("SD card mounted successfully\n");
         f_unmount(pSD->pcName);
         return 0;
     }

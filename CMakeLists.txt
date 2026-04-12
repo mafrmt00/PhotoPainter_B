@@ -1,4 +1,4 @@
-# == DO NEVER EDIT THE NEXT LINES for Raspberry Pi Pico VS Code Extension to work ==
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
     set(USERHOME $ENV{USERPROFILE})
 else()
@@ -25,6 +25,7 @@ add_subdirectory(lib/RTC)
 add_subdirectory(lib/Fonts)
 add_subdirectory(lib/GUI)
 add_subdirectory(lib/led) 
+add_subdirectory(lib/minIni)
 add_subdirectory(examples)
 add_subdirectory(lib/FatFs_SPI build)
 
@@ -34,17 +35,18 @@ include_directories(./lib/Config)
 include_directories(./lib/GUI)
 include_directories(./lib/RTC)
 include_directories(./lib/led)
+include_directories(./lib/minIni)
 
 # generate an executable file
-add_executable(epd
+add_executable(Pico_ePaper_73
 main.c
 )
 
 # enable usb output, disable uart output
-pico_enable_stdio_usb(epd 1)
-pico_enable_stdio_uart(epd 0)
+pico_enable_stdio_usb(Pico_ePaper_73 1)
+pico_enable_stdio_uart(Pico_ePaper_73 0)
 
 # create map/bin/hex/uf2 file etc.
-pico_add_extra_outputs(epd)
+pico_add_extra_outputs(Pico_ePaper_73)
  
-target_link_libraries(epd examples ePaper GUI led Fonts Config RTC FatFs_SPI)
+target_link_libraries(Pico_ePaper_73 examples ePaper GUI led Fonts Config RTC FatFs_SPI minIni)

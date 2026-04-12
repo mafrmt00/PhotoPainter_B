@@ -10,5 +10,7 @@ void powerOff(void);
 void led_OFF_ACT(void);
 void led_ON_ACT(void);
 
+void led_ON_PWR(void);
+void led_OFF_PWR(void);
 
 #endif
