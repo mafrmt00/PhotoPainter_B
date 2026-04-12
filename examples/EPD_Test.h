@@ -33,7 +33,7 @@
 int EPD_7in3e_test(void);
 
 int EPD_7in3e_display(float vol);
-int EPD_7in3e_display_BMP(const char *path, float vol);
+int EPD_7in3e_display_BMP(const char *path, float vol, int overlayId);
 
 
 #endif
