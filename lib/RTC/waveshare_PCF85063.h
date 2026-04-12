@@ -33,18 +33,27 @@ typedef struct{
   UWORD seconds;
 }Time_data;
 
+#include <stdint.h>
+
 int DecToBcd(int val);
 int BcdToDec(int val);
 void PCF85063_init();
 void PCF85063_SetTime_YMD(int Years,int Months,int Days);
 void PCF85063_SetTime_HMS(int hour,int minute,int second);
 Time_data PCF85063_GetTime();
+uint64_t PCF85063_GetEpochTime(void);
+uint64_t Time_dataToEpoch(const Time_data *t);
+void PCF85063_SetTime_Epoch(uint64_t epoch);
 void PCF85063_alarm_Time_Enabled(Time_data time);
+void PCF85063_alarm_Epoch_Enabled(uint64_t epoch);
 void PCF85063_alarm_Time_Disable();
 int PCF85063_get_alarm_flag();
 void PCF85063_clear_alarm_flag();
+void PCF85063_PrintCurrentTime(void);
+Time_data parseBuildDateTime(void);
+uint64_t parseBuildDateTimeEpoch(void);
 void PCF85063_test();
-void rtcRunAlarm(Time_data time, Time_data alarmTime);
+void rtcRunAlarm(uint64_t uiAlarmIn);
 
 
 #endif
