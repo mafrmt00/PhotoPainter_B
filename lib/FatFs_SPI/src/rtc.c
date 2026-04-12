@@ -14,9 +14,10 @@ specific language governing permissions and limitations under the License.
 #include <stdio.h>
 #include <time.h>
 //
-// #include "hardware/rtc.h"
+//#include "hardware/rtc.h"
 #include "pico/stdio.h"
 #include "pico/stdlib.h"
+#include "pico/types.h"
 #include "pico/util/datetime.h"
 //
 #include "ff.h"
@@ -24,7 +25,7 @@ specific language governing permissions and limitations under the License.
 //
 #include "rtc.h"
 
-// static time_t epochtime;
+static time_t epochtime;
 
 // // Make an attempt to save a recent time stamp across reset:
 // typedef struct rtc_save {
@@ -83,5 +84,35 @@ specific language governing permissions and limitations under the License.
 
 // Called by FatFs:
 DWORD get_fattime(void) {
+    // datetime_t t = {0, 0, 0, 0, 0, 0, 0};
+    // bool rc = rtc_get_datetime(&t);
+    // if (!rc) return 0;
+
+    // DWORD fattime = 0;
+    // // bit31:25
+    // // Year origin from the 1980 (0..127, e.g. 37 for 2017)
+    // uint8_t yr = t.year - 1980;
+    // fattime |= (0b01111111 & yr) << 25;
+    // // bit24:21
+    // // Month (1..12)
+    // uint8_t mo = t.month;
+    // fattime |= (0b00001111 & mo) << 21;
+    // // bit20:16
+    // // Day of the month (1..31)
+    // uint8_t da = t.day;
+    // fattime |= (0b00011111 & da) << 16;
+    // // bit15:11
+    // // Hour (0..23)
+    // uint8_t hr = t.hour;
+    // fattime |= (0b00011111 & hr) << 11;
+    // // bit10:5
+    // // Minute (0..59)
+    // uint8_t mi = t.min;
+    // fattime |= (0b00111111 & mi) << 5;
+    // // bit4:0
+    // // Second / 2 (0..29, e.g. 25 for 50)
+    // uint8_t sd = t.sec / 2;
+    // fattime |= (0b00011111 & sd);
+    // return fattime;
     return 0;
 }

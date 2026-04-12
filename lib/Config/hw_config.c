@@ -35,9 +35,7 @@ socket, which SPI it is driven by, and how it is wired.
 //
 #include "diskio.h" /* Declarations of disk functions */
 
-#include "DEV_Config.h"
-
-void spi_dma_isr();
+#include "DEV_Config.h" // For GPIO pin definitions
 
 // Hardware Configuration of SPI "objects"
 // Note: multiple SD cards can be driven by one SPI if they use different slave
@@ -48,33 +46,22 @@ static spi_t spis[] = {  // One for each SPI.
         .miso_gpio = SD_MISO_PIN,  // GPIO number (not pin number)
         .mosi_gpio = SD_MOSI_PIN,
         .sck_gpio = SD_CLK_PIN,
-        .mosi_gpio = GPIO_DRIVE_STRENGTH_2MA,
-        .sck_gpio = GPIO_DRIVE_STRENGTH_2MA,
-
-        /* The choice of SD card matters! SanDisk runs at the highest speed. PNY
-           can only mangage 5 MHz. Those are all I've tried. */
-        //.baud_rate = 1000 * 1000,
-        .baud_rate = 12500 * 1000,  // The limitation here is SPI slew rate.
-        //.baud_rate = 25 * 1000 * 1000, // Actual frequency: 20833333. Has
-        // worked for me with SanDisk.
-
-        .dma_isr = spi_dma_isr
+        .baud_rate = 12500 * 1000,  
+        //.baud_rate = 25 * 1000 * 1000, // Actual frequency: 20833333. 
     }
 };
 
 // Hardware Configuration of the SD Card "objects"
 static sd_card_t sd_cards[] = {  // One for each SD card
     {
-        .pcName = "0:",           // Name used to mount device
-        .spi = &spis[0],          // Pointer to the SPI driving this card
+        .pcName = "0:",   // Name used to mount device
+        .spi = &spis[0],  // Pointer to the SPI driving this card
         .ss_gpio = SD_CS_PIN,             // The SPI slave select GPIO for this SD card
-        //.use_card_detect = false,
-        .ss_gpio = GPIO_DRIVE_STRENGTH_4MA,
-        .m_Status = STA_NOINIT
-    }
-};
-
-void spi_dma_isr() { spi_irq_handler(&spis[0]); }
+        .use_card_detect = false,
+        // .card_detect_gpio = 13,   // Card detect
+        // .card_detected_true = 1  // What the GPIO read returns when a card is
+        //                          // present. Use -1 if there is no card detect.
+    }};
 
 /* ********************************************************************** */
 size_t sd_get_num() { return count_of(sd_cards); }

@@ -17,7 +17,7 @@ specific language governing permissions and limitations under the License.
 extern "C" {
 #endif
 
-// void time_init();
+void time_init();
 
 #ifdef __cplusplus
 }
