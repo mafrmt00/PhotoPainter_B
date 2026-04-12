@@ -47,6 +47,7 @@ Color Index
 // #define EPD_7IN3E_ORANGE  0x4   /// 100
 #define EPD_7IN3E_BLUE    0x5   /// 101
 #define EPD_7IN3E_GREEN   0x6   /// 110
+#define EPD_7IN3E_TRANSPARENT 0x7   /// 111
 
 void EPD_7IN3E_Init(void);
 void EPD_7IN3E_Init_Fast(void);
