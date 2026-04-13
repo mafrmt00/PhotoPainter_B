@@ -33,7 +33,11 @@ void ledCharged(void)
 
 void powerOff(void)
 {
-    DEV_Digital_Write(BAT_OFF, 0);
+    DEV_Digital_Write(BAT_OFF, 0); // Turn off battery power to the system
+
+    sleep_ms(300); // Allow time for power to fully cut before any further code execution attempts to run (should not happen since power is cut, but added for safety)
+
+    watchdog_reboot(0,0,0); // Force a reset to start clean if we are still running code after power off command (should not happen, but added for safety)
 }
 
 void led_OFF_ACT(void)
